@@ -30,7 +30,7 @@ def create_model(num_classes):
     """
     Load pretrained ResNet18 and adapt for artifact classification.
     """
-    model = models.resnet18(pretrained=True)
+model = models.resnet34(pretrained=True)
     # Freeze early layers
     for param in model.layer1.parameters():
         param.requires_grad = False

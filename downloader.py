@@ -4,7 +4,7 @@ import time
 import requests
 from tqdm import tqdm
 
-BASE_DIR = os.environ.get("DATA_DIR", "/data/Archeological_Dataset")
+BASE_DIR = os.environ.get("DATA_DIR", r"C:\python\Archeological_Dataset")
 
 HEADERS = {"User-Agent": "dataset-downloader/1.0 (contact: your_email@example.com)"}
 
@@ -142,8 +142,8 @@ def download_images(query, category, limit=100, per_request=50, sleep_between_re
         img_url = fix_thumb_url(img_url)
         img_name = img_url.split("/")[-1].split("?")[0]
         dst_path = os.path.join(save_folder, img_name)
+
         if os.path.exists(dst_path):
-            downloaded += 1
             continue
 
         ok = download_with_retries(session, img_url, dst_path, max_retries=6)
@@ -159,9 +159,10 @@ def download_images(query, category, limit=100, per_request=50, sleep_between_re
 
 
 if __name__ == "__main__":
-    download_images("ancient pottery", "ceramics", limit=100)
-    download_images("bronze age jewelry", "jewelry", limit=100)
-    download_images("neolithic tools", "tools", limit=100)
-    download_images("archaeological pottery fragments", "fragments", limit=100)
-    download_images("ancient beads", "beads", limit=100)
+    download_images("ancient pottery", "ceramics", limit=300)
+    download_images("bronze age jewelry", "jewelry", limit=300)
+    download_images("neolithic tools", "tools", limit=300)
+    download_images("archaeological pottery fragments", "fragments", limit=300)
+    download_images("ancient beads", "beads", limit=300)
+    
 # ...existing code...
