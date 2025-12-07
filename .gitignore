@@ -18,7 +18,7 @@ env/
 .venv
 
 # Data / Downloaded images (too large)
-Archaeological_Dataset/
+Archeological_Dataset/
 *.zip
 *.tar.gz
 

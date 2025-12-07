@@ -4,7 +4,7 @@ import time
 import requests
 from tqdm import tqdm
 
-BASE_DIR = os.environ.get("DATA_DIR", "/data/Archaeological_Dataset")
+BASE_DIR = os.environ.get("DATA_DIR", "/data/Archeological_Dataset")
 
 HEADERS = {"User-Agent": "dataset-downloader/1.0 (contact: your_email@example.com)"}
 

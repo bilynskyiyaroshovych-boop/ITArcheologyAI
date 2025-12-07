@@ -1,0 +1,14 @@
+# exclude data and venv
+Archeological_Dataset/
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+.git
+.DS_Store
+.gitignore
+Dockerfile
+.dockerignore
+*.log
+.env
