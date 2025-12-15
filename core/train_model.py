@@ -22,9 +22,7 @@ CLASSES_FILE = os.path.join(MODEL_DIR, "classes.json")
 IMAGE_SIZE = 160
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
-NUM_EPOCHS = 10
 NUM_WORKERS = 4
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -84,62 +82,78 @@ def get_loaders():
     return train_loader, val_loader, len(dataset.classes)
 
 
-def train():
-    train_loader, val_loader, num_classes = get_loaders()
-    model = create_model(num_classes)
+def train(num_epochs=10, log_callback=None):
+   
+    def log(msg):
+        if log_callback:
+            log_callback(msg)
+        else:
+            print(msg)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.fc.parameters(), lr=LEARNING_RATE)
+    try:
+        log("Loading data...")
+        train_loader, val_loader, num_classes = get_loaders()
+        log(f"Data loaded. Classes: {num_classes}")
+        
+        model = create_model(num_classes)
 
-    best_val_acc = 0.0
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.fc.parameters(), lr=LEARNING_RATE)
 
-    for epoch in range(NUM_EPOCHS):
-        print(f"\nEpoch {epoch + 1}/{NUM_EPOCHS}")
+        best_val_acc = 0.0
 
-        model.train()
-        correct, total = 0, 0
+        log(f"Starting training for {num_epochs} epochs on {DEVICE}...")
 
-        for images, labels in tqdm(train_loader, desc="Training"):
-            images = images.to(DEVICE, non_blocking=True)
-            labels = labels.to(DEVICE, non_blocking=True)
+        for epoch in range(num_epochs):
+            log(f"Epoch {epoch + 1}/{num_epochs}")
 
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+            model.train()
+            correct, total = 0, 0
 
-            _, preds = torch.max(outputs, 1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-
-        train_acc = correct / total
-
-        model.eval()
-        correct, total = 0, 0
-
-        with torch.no_grad():
-            for images, labels in tqdm(val_loader, desc="Validation"):
+            # Training loop
+           
+            for i, (images, labels) in enumerate(train_loader):
                 images = images.to(DEVICE, non_blocking=True)
                 labels = labels.to(DEVICE, non_blocking=True)
 
+                optimizer.zero_grad()
                 outputs = model(images)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                optimizer.step()
+
                 _, preds = torch.max(outputs, 1)
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
 
-        val_acc = correct / total
+            train_acc = correct / total if total > 0 else 0
 
-        print(f"Train acc: {train_acc:.4f} | Val acc: {val_acc:.4f}")
+            # Validation loop
+            model.eval()
+            correct, total = 0, 0
+            with torch.no_grad():
+                for images, labels in val_loader:
+                    images = images.to(DEVICE, non_blocking=True)
+                    labels = labels.to(DEVICE, non_blocking=True)
+                    outputs = model(images)
+                    _, preds = torch.max(outputs, 1)
+                    correct += (preds == labels).sum().item()
+                    total += labels.size(0)
 
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            torch.save(model.state_dict(), CHECKPOINT_FILE)
-            print("Best model saved")
+            val_acc = correct / total if total > 0 else 0
 
-    print("\nTraining finished")
-    print(f"Best validation accuracy: {best_val_acc:.4f}")
+            log(f"  Train Acc: {train_acc:.1%} | Val Acc: {val_acc:.1%}")
 
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                torch.save(model.state_dict(), CHECKPOINT_FILE)
+                log("  -> Best model saved!")
+
+        log(f"Training finished. Best Val Acc: {best_val_acc:.1%}")
+    
+    except Exception as e:
+        log(f"Error during training: {str(e)}")
+        raise e
 
 if __name__ == "__main__":
     train()
