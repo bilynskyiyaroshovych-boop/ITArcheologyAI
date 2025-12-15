@@ -1,8 +1,15 @@
 import sys
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QPushButton, QLabel,
-    QTabWidget, QTextEdit
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QTextEdit,
+    QTabWidget,
+    QComboBox,
 )
 from app.workers import DownloadWorker
 
@@ -10,6 +17,7 @@ from app.workers import DownloadWorker
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Archaeological Artifact Classifier")
         self.resize(900, 600)
 
@@ -22,36 +30,57 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(tabs)
 
-    # ---------- DOWNLOADER TAB ----------
+    # ================= DOWNLOADER TAB =================
     def downloader_tab(self):
         w = QWidget()
         layout = QVBoxLayout()
 
-        layout.addWidget(QLabel("Dataset downloader"))
+        title = QLabel("Dataset downloader")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title)
 
+        # ---- dataset size selector ----
+        size_layout = QHBoxLayout()
+        size_label = QLabel("Images per category:")
+
+        self.limit_combo = QComboBox()
+        self.limit_combo.addItems(["100", "300", "500", "1000"])
+        self.limit_combo.setCurrentIndex(0)  # початкове значення 100
+
+        size_layout.addWidget(size_label)
+        size_layout.addWidget(self.limit_combo)
+        size_layout.addStretch()
+        layout.addLayout(size_layout)
+
+        # ---- start button ----
         self.download_btn = QPushButton("Start download")
         self.download_btn.clicked.connect(self.start_download)
+        layout.addWidget(self.download_btn)
 
+        # ---- log output ----
         self.log_box = QTextEdit()
         self.log_box.setReadOnly(True)
-
-        layout.addWidget(self.download_btn)
+        self.log_box.setPlaceholderText("Logs will appear here...")
         layout.addWidget(self.log_box)
 
         w.setLayout(layout)
         return w
 
     def start_download(self):
+        limit = int(self.limit_combo.currentText())
+
         tasks = [
-            ("ancient pottery", "ceramics", 100),
-            ("bronze age jewelry", "jewelry", 100),
-            ("neolithic tools", "tools", 100),
-            ("archaeological pottery fragments", "fragments", 100),
-            ("ancient beads", "beads", 100),
+            ("ancient pottery", "ceramics", limit),
+            ("bronze age jewelry", "jewelry", limit),
+            ("neolithic tools", "tools", limit),
+            ("archaeological pottery fragments", "fragments", limit),
+            ("ancient beads", "beads", limit),
         ]
 
         self.download_btn.setEnabled(False)
-        self.log_box.append("Preparing tasks...")
+        self.log_box.append(
+            f"Starting download: {limit} images per category..."
+        )
 
         self.worker = DownloadWorker(tasks)
         self.worker.log.connect(self.log_box.append)
@@ -59,24 +88,28 @@ class MainWindow(QMainWindow):
         self.worker.start()
 
     def download_finished(self):
-        self.log_box.append("All downloads done.")
+        self.log_box.append("All downloads finished.")
         self.download_btn.setEnabled(True)
 
-    # ---------- TRAINING TAB ----------
+    # ================= TRAINING TAB =================
     def training_tab(self):
         w = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Training (next step)"))
+
+        layout.addWidget(QLabel("Training (coming next)"))
         layout.addWidget(QPushButton("Start training"))
+
         w.setLayout(layout)
         return w
 
-    # ---------- PREDICT TAB ----------
+    # ================= PREDICT TAB =================
     def predict_tab(self):
         w = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Prediction (next step)"))
+
+        layout.addWidget(QLabel("Prediction (coming next)"))
         layout.addWidget(QPushButton("Choose image"))
+
         w.setLayout(layout)
         return w
 
@@ -86,3 +119,7 @@ def run_gui():
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    run_gui()
