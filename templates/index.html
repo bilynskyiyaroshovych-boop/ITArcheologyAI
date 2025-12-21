@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artifact Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 480px;
+            margin: auto;
+        }
+        h2 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f3f3f3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Archaeological Artifact Classifier</h2>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept="image/*" required>
+    <button type="submit">Recognize</button>
+</form>
+
+{% if result %}
+<div class="result">
+    <strong>Class:</strong> {{ result.class }}<br>
+    <strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%<br><br>
+    {{ result.text }}
+</div>
+{% endif %}
+
+</body>
+</html>

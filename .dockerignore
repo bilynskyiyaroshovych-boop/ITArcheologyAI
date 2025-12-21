@@ -12,3 +12,8 @@ Dockerfile
 .dockerignore
 *.log
 .env
+build_log.txt
+README.md
+tests/
+.idea/
+.vscode/

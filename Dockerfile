@@ -1,11 +1,20 @@
 FROM python:3.12-slim
-WORKDIR /downloader
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-COPY requirements-ml.txt /downloader/requirements-ml.txt
+WORKDIR /app
 
-RUN pip install --no-cache-dir --default-timeout=100 --retries 5 -r /downloader/requirements-ml.txt
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1 \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . /downloader
+COPY requirements-ml.txt .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements-ml.txt
 
-CMD ["/bin/bash"]
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

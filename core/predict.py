@@ -1,3 +1,4 @@
+
 import os
 import json
 import torch
@@ -6,12 +7,12 @@ from torchvision import transforms
 from torchvision.models import resnet34, ResNet34_Weights
 from PIL import Image
 
-MODEL_DIR = "models"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
 CHECKPOINT_FILE = os.path.join(MODEL_DIR, "artifact_classifier.pth")
 CLASSES_FILE = os.path.join(MODEL_DIR, "classes.json")
 
 IMAGE_SIZE = 160
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 RESPONSES = {
@@ -22,17 +23,16 @@ RESPONSES = {
     "beads": "This looks like ancient beads.",
 }
 
-
-def create_model(num_classes: int):
-    weights = ResNet34_Weights.DEFAULT
-    model = resnet34(weights=weights)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    return model.to(DEVICE)
+_model = None
+_classes = None
+_transform = None
 
 
-def predict(image_path: str):
-    if not os.path.exists(image_path):
-        raise FileNotFoundError("Image not found")
+def _load_model():
+    global _model, _classes, _transform
+
+    if _model is not None:
+        return
 
     if not os.path.exists(CHECKPOINT_FILE):
         raise FileNotFoundError("Model checkpoint not found")
@@ -41,15 +41,16 @@ def predict(image_path: str):
         raise FileNotFoundError("Classes file not found")
 
     with open(CLASSES_FILE, "r") as f:
-        classes = json.load(f)
+        _classes = json.load(f)
 
-    model = create_model(len(classes))
-    model.load_state_dict(
-        torch.load(CHECKPOINT_FILE, map_location=DEVICE)
-    )
-    model.eval()
+    weights = ResNet34_Weights.DEFAULT
+    _model = resnet34(weights=weights)
+    _model.fc = nn.Linear(_model.fc.in_features, len(_classes))
+    _model.load_state_dict(torch.load(CHECKPOINT_FILE, map_location=DEVICE))
+    _model.to(DEVICE)
+    _model.eval()
 
-    transform = transforms.Compose([
+    _transform = transforms.Compose([
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.ToTensor(),
         transforms.Normalize(
@@ -58,30 +59,27 @@ def predict(image_path: str):
         ),
     ])
 
-    image = Image.open(image_path).convert("RGB")
-    tensor = transform(image).unsqueeze(0).to(DEVICE)
+
+def predict_pil(image: Image.Image):
+    _load_model()
+
+    tensor = _transform(image).unsqueeze(0).to(DEVICE)
 
     with torch.no_grad():
-        outputs = model(tensor)
+        outputs = _model(tensor)
         probs = torch.softmax(outputs, dim=1)
         conf, pred = torch.max(probs, 1)
 
-    cls = classes[pred.item()]
+    cls = _classes[pred.item()]
     confidence = conf.item()
     text = RESPONSES.get(cls.lower(), cls)
 
-    return cls, confidence, probs[0], text
+    return {
+        "class": cls,
+        "confidence": confidence,
+        "text": text,
+    }
 
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("image", type=str)
-    args = parser.parse_args()
-
-    cls, conf, probs, text = predict(args.image)
-
-    print(f"Class: {cls}")
-    print(f"Confidence: {conf:.1%}")
-    print(text)
+def predict(image_path: str):
+    image = Image.open(image_path).convert("RGB")
+    return predict_pil(image)
