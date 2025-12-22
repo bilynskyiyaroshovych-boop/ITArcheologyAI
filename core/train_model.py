@@ -7,9 +7,10 @@ from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torchvision.models import resnet34, ResNet34_Weights
-from tqdm import tqdm
 
-torch.backends.cudnn.benchmark = True
+# Якщо є CUDA, вмикаємо бенчмарк для швидкості
+if torch.cuda.is_available():
+    torch.backends.cudnn.benchmark = True
 
 DATA_DIR = os.environ.get(
     "DATA_DIR", r"C:\python\Archeological_Dataset"
@@ -22,7 +23,11 @@ CLASSES_FILE = os.path.join(MODEL_DIR, "classes.json")
 IMAGE_SIZE = 160
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
-NUM_WORKERS = 4
+
+# Налаштування кількості потоків для завантаження даних
+# На Windows (os.name == 'nt') безпечно використовувати 0, щоб уникнути зависань
+NUM_WORKERS = 0 if os.name == 'nt' else 4
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -30,14 +35,19 @@ def create_model(num_classes: int):
     weights = ResNet34_Weights.DEFAULT
     model = resnet34(weights=weights)
 
+    # Заморожуємо базові шари (Transfer Learning)
     for param in model.parameters():
         param.requires_grad = False
 
+    # Замінюємо останній шар під нашу кількість класів
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(DEVICE)
 
 
 def get_loaders():
+    # pin_memory має сенс тільки якщо ми копіюємо дані на CUDA (відеокарту)
+    use_pin_memory = (DEVICE.type == "cuda")
+
     transform = transforms.Compose([
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.RandomHorizontalFlip(),
@@ -49,6 +59,9 @@ def get_loaders():
         ),
     ])
 
+    if not os.path.exists(DATA_DIR):
+        raise FileNotFoundError(f"Directory not found: {DATA_DIR}")
+
     dataset = ImageFolder(DATA_DIR, transform=transform)
 
     if len(dataset) == 0:
@@ -56,9 +69,11 @@ def get_loaders():
 
     os.makedirs(MODEL_DIR, exist_ok=True)
 
+    # Зберігаємо імена класів
     with open(CLASSES_FILE, "w") as f:
         json.dump(dataset.classes, f, indent=2)
 
+    # Розбиваємо на train/val
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_ds, val_ds = random_split(dataset, [train_size, val_size])
@@ -68,7 +83,7 @@ def get_loaders():
         batch_size=BATCH_SIZE,
         shuffle=True,
         num_workers=NUM_WORKERS,
-        pin_memory=True,
+        pin_memory=use_pin_memory, 
     )
 
     val_loader = DataLoader(
@@ -76,14 +91,14 @@ def get_loaders():
         batch_size=BATCH_SIZE,
         shuffle=False,
         num_workers=NUM_WORKERS,
-        pin_memory=True,
+        pin_memory=use_pin_memory,
     )
 
     return train_loader, val_loader, len(dataset.classes)
 
 
 def train(num_epochs=10, log_callback=None):
-   
+    
     def log(msg):
         if log_callback:
             log_callback(msg)
@@ -91,7 +106,10 @@ def train(num_epochs=10, log_callback=None):
             print(msg)
 
     try:
+        log(f"Using device: {DEVICE}")
+        log(f"Workers: {NUM_WORKERS}")
         log("Loading data...")
+        
         train_loader, val_loader, num_classes = get_loaders()
         log(f"Data loaded. Classes: {num_classes}")
         
@@ -102,7 +120,7 @@ def train(num_epochs=10, log_callback=None):
 
         best_val_acc = 0.0
 
-        log(f"Starting training for {num_epochs} epochs on {DEVICE}...")
+        log(f"Starting training for {num_epochs} epochs...")
 
         for epoch in range(num_epochs):
             log(f"Epoch {epoch + 1}/{num_epochs}")
@@ -110,8 +128,7 @@ def train(num_epochs=10, log_callback=None):
             model.train()
             correct, total = 0, 0
 
-            # Training loop
-           
+            # --- Training loop ---
             for i, (images, labels) in enumerate(train_loader):
                 images = images.to(DEVICE, non_blocking=True)
                 labels = labels.to(DEVICE, non_blocking=True)
@@ -128,7 +145,7 @@ def train(num_epochs=10, log_callback=None):
 
             train_acc = correct / total if total > 0 else 0
 
-            # Validation loop
+            # --- Validation loop ---
             model.eval()
             correct, total = 0, 0
             with torch.no_grad():
@@ -153,7 +170,9 @@ def train(num_epochs=10, log_callback=None):
     
     except Exception as e:
         log(f"Error during training: {str(e)}")
+        # Важливо прокинути помилку далі, щоб GUI дізнався про збій
         raise e
 
 if __name__ == "__main__":
+    # Для тестування запуску без інтерфейсу
     train()

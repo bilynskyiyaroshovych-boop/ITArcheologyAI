@@ -4,49 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artifact Classifier</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 480px;
-            margin: auto;
-        }
-        h2 {
-            text-align: center;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        button {
-            padding: 10px;
-            font-size: 16px;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            background: #f3f3f3;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="/static/app.js" defer></script>
 </head>
 <body>
 
-<h2>Archaeological Artifact Classifier</h2>
+<div class="container">
+    <h2>Artifact Classifier</h2>
 
-<form method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept="image/*" required>
-    <button type="submit">Recognize</button>
-</form>
+    <form method="post" enctype="multipart/form-data">
+        <div class="upload-box" id="drop-area">
+            <p id="upload-text" class="{{ 'hidden' if image_data else '' }}">
+                Click or Drag image here
+            </p>
+            
+            <input type="file" name="file" accept="image/*" required id="file-input">
+            
+            <img id="preview" class="preview-img" 
+                 src="{{ image_data if image_data else '' }}">
+        </div>
 
-{% if result %}
-<div class="result">
-    <strong>Class:</strong> {{ result.class }}<br>
-    <strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%<br><br>
-    {{ result.text }}
+        <button type="submit" class="btn-submit">Recognize Artifact</button>
+    </form>
+
+    {% if result %}
+    <div class="result-card" id="result-box">
+        <div class="result-header">
+            <span class="class-name">{{ result.class }}</span>
+            <span class="confidence">{{ "%.1f"|format(result.confidence * 100) }}%</span>
+        </div>
+        <p>{{ result.text }}</p>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 
 </body>
 </html>
