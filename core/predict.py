@@ -83,3 +83,23 @@ def predict_pil(image: Image.Image):
 def predict(image_path: str):
     image = Image.open(image_path).convert("RGB")
     return predict_pil(image)
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Archaeological artifact classification"
+    )
+    parser.add_argument(
+        "image",
+        type=str,
+        help="Path to image file"
+    )
+
+    args = parser.parse_args()
+
+    result = predict(args.image)
+
+    print("Class:", result["class"])
+    print("Confidence:", f"{result['confidence']:.1%}")
+    print("Description:", result["text"])

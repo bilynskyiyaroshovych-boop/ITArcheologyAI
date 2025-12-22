@@ -1,4 +1,5 @@
 import os
+from unittest import result
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
     QLineEdit, QFileDialog, QFrame, QSizePolicy
@@ -137,7 +138,11 @@ class PredictTab(QWidget):
             self.result_label.setText("Analyzing...")
             QApplication.processEvents()
             
-            cls, conf, probs, text = predict(path)
+            result = predict(path)
+
+            cls = result["class"]
+            conf = result["confidence"]
+            text = result["text"]
             
             conf_color = "#27ae60" if conf > 0.7 else "#e67e22" if conf > 0.4 else "#c0392b"
             
