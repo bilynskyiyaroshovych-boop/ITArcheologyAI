@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTextEdit, QSpinBox, QFrame
-)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QPushButton,
+                               QSpinBox, QTextEdit, QVBoxLayout, QWidget)
+
 from app.workers import TrainWorker
+
 
 class TrainingTab(QWidget):
     def __init__(self):
@@ -15,27 +16,24 @@ class TrainingTab(QWidget):
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(20)
 
-        
         header = QLabel("Model Training")
         header.setObjectName("Header")
         layout.addWidget(header)
 
-        
         control_frame = QFrame()
         control_frame.setObjectName("Panel")
-        
+
         control_layout = QHBoxLayout(control_frame)
         control_layout.setContentsMargins(20, 20, 20, 20)
         control_layout.setSpacing(15)
-        
+
         lbl = QLabel("Training Epochs:")
-        
+
         self.epochs_spin = QSpinBox()
         self.epochs_spin.setRange(1, 10)
         self.epochs_spin.setValue(5)
         self.epochs_spin.setFixedWidth(80)
-        
-        
+
         self.train_btn = QPushButton("Start Training")
         self.train_btn.setObjectName("ActionButton")
         self.train_btn.setCursor(Qt.PointingHandCursor)
@@ -48,9 +46,8 @@ class TrainingTab(QWidget):
 
         layout.addWidget(control_frame)
 
-        
         layout.addWidget(QLabel("Training Output:"))
-        
+
         self.log_box = QTextEdit()
         self.log_box.setReadOnly(True)
         layout.addWidget(self.log_box)

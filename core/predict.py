@@ -1,11 +1,11 @@
-
-import os
 import json
+import os
+
 import torch
 import torch.nn as nn
-from torchvision import transforms
-from torchvision.models import resnet34, ResNet34_Weights
 from PIL import Image
+from torchvision import transforms
+from torchvision.models import resnet34
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
@@ -43,21 +43,25 @@ def _load_model():
     with open(CLASSES_FILE, "r") as f:
         _classes = json.load(f)
 
-    weights = ResNet34_Weights.DEFAULT
+    # Do not request pretrained weights at inference time (may attempt network download).
+    # We only need the architecture so use weights=None and then load our checkpoint.
+    weights = None
     _model = resnet34(weights=weights)
     _model.fc = nn.Linear(_model.fc.in_features, len(_classes))
     _model.load_state_dict(torch.load(CHECKPOINT_FILE, map_location=DEVICE))
     _model.to(DEVICE)
     _model.eval()
 
-    _transform = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225],
-        ),
-    ])
+    _transform = transforms.Compose(
+        [
+            transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+        ]
+    )
 
 
 def predict_pil(image: Image.Image):
@@ -80,9 +84,11 @@ def predict_pil(image: Image.Image):
         "text": text,
     }
 
+
 def predict(image_path: str):
     image = Image.open(image_path).convert("RGB")
     return predict_pil(image)
+
 
 if __name__ == "__main__":
     import argparse
@@ -90,11 +96,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Archaeological artifact classification"
     )
-    parser.add_argument(
-        "image",
-        type=str,
-        help="Path to image file"
-    )
+    parser.add_argument("image", type=str, help="Path to image file")
 
     args = parser.parse_args()
 

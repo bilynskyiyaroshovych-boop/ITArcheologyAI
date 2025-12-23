@@ -1,7 +1,10 @@
 import traceback
+
 from PySide6.QtCore import QThread, Signal
+
 from core.downloader import run_downloader
 from core.train_model import train
+
 
 class DownloadWorker(QThread):
     log = Signal(str)
@@ -32,9 +35,9 @@ class TrainWorker(QThread):
     def run(self):
         self.log.emit("Initializing training...")
         try:
-        
+
             train(num_epochs=self.epochs, log_callback=self.log.emit)
-        except Exception as e:
-        
+        except Exception:
+
             self.log.emit(f"Critical Error:\n{traceback.format_exc()}")
         self.finished.emit()

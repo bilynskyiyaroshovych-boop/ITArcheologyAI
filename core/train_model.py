@@ -1,20 +1,19 @@
-import os
 import json
+import os
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
-from torchvision.models import resnet34, ResNet34_Weights
+from torchvision.models import ResNet34_Weights, resnet34
 
 # Якщо є CUDA, вмикаємо бенчмарк для швидкості
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
 
-DATA_DIR = os.environ.get(
-    "DATA_DIR", r"C:\python\Archeological_Dataset"
-)
+DATA_DIR = os.environ.get("DATA_DIR", r"C:\python\Archeological_Dataset")
 
 MODEL_DIR = "models"
 CHECKPOINT_FILE = os.path.join(MODEL_DIR, "artifact_classifier.pth")
@@ -26,7 +25,7 @@ LEARNING_RATE = 0.001
 
 # Налаштування кількості потоків для завантаження даних
 # На Windows (os.name == 'nt') безпечно використовувати 0, щоб уникнути зависань
-NUM_WORKERS = 0 if os.name == 'nt' else 4
+NUM_WORKERS = 0 if os.name == "nt" else 4
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -46,18 +45,20 @@ def create_model(num_classes: int):
 
 def get_loaders():
     # pin_memory має сенс тільки якщо ми копіюємо дані на CUDA (відеокарту)
-    use_pin_memory = (DEVICE.type == "cuda")
+    use_pin_memory = DEVICE.type == "cuda"
 
-    transform = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(10),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225],
-        ),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(10),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+        ]
+    )
 
     if not os.path.exists(DATA_DIR):
         raise FileNotFoundError(f"Directory not found: {DATA_DIR}")
@@ -83,7 +84,7 @@ def get_loaders():
         batch_size=BATCH_SIZE,
         shuffle=True,
         num_workers=NUM_WORKERS,
-        pin_memory=use_pin_memory, 
+        pin_memory=use_pin_memory,
     )
 
     val_loader = DataLoader(
@@ -98,7 +99,7 @@ def get_loaders():
 
 
 def train(num_epochs=10, log_callback=None):
-    
+
     def log(msg):
         if log_callback:
             log_callback(msg)
@@ -109,10 +110,10 @@ def train(num_epochs=10, log_callback=None):
         log(f"Using device: {DEVICE}")
         log(f"Workers: {NUM_WORKERS}")
         log("Loading data...")
-        
+
         train_loader, val_loader, num_classes = get_loaders()
         log(f"Data loaded. Classes: {num_classes}")
-        
+
         model = create_model(num_classes)
 
         criterion = nn.CrossEntropyLoss()
@@ -167,11 +168,12 @@ def train(num_epochs=10, log_callback=None):
                 log("  -> Best model saved!")
 
         log(f"Training finished. Best Val Acc: {best_val_acc:.1%}")
-    
+
     except Exception as e:
         log(f"Error during training: {str(e)}")
         # Важливо прокинути помилку далі, щоб GUI дізнався про збій
         raise e
+
 
 if __name__ == "__main__":
     # Для тестування запуску без інтерфейсу

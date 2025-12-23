@@ -1,16 +1,13 @@
 import os
 import time
-import requests
-from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
-BASE_DIR = os.environ.get(
-    "DATA_DIR", r"C:\python\Archeological_Dataset"
-)
+import requests
+from tqdm import tqdm
 
-HEADERS = {
-    "User-Agent": "dataset-downloader/1.0 (contact: antonbylunskui@gmail.com)"
-}
+BASE_DIR = os.environ.get("DATA_DIR", r"C:\python\Archeological_Dataset")
+
+HEADERS = {"User-Agent": "dataset-downloader/1.0 (contact: antonbylunskui@gmail.com)"}
 
 
 def fix_thumb_url(url: str) -> str:
@@ -177,9 +174,7 @@ def run_downloader(tasks_data):
         ...
     ]
     """
-    tasks_with_pos = [
-        task + (i,) for i, task in enumerate(tasks_data)
-    ]
+    tasks_with_pos = [task + (i,) for i, task in enumerate(tasks_data)]
 
     with ThreadPoolExecutor(max_workers=len(tasks_data)) as executor:
         executor.map(download_images, tasks_with_pos)
@@ -187,11 +182,41 @@ def run_downloader(tasks_data):
 
 if __name__ == "__main__":
     tasks = [
-        ("ancient pottery", "ceramics", 600),
-        ("bronze age jewelry", "jewelry", 600),
-        ("neolithic tools", "tools", 600),
-        ("archaeological pottery fragments", "fragments", 600),
-        ("ancient beads", "beads", 600),
+        # Додаємо синоніми та пов'язані терміни через OR
+        (
+            "ancient pottery OR archaeological ceramics OR clay vessels "
+            "OR amphora OR terracotta",
+            "ceramics",
+            1000,
+        ),
+        # Розширюємо до прикрас загалом, не тільки Бронзового віку, або додаємо синоніми
+        (
+            "bronze age jewelry OR ancient jewelry OR gold ornaments OR "
+            "archaeological finds jewelry OR fibula",
+            "jewelry",
+            1000,
+        ),
+        # Додаємо конкретні матеріали (flint, stone) та синоніми (implements, weapons)
+        (
+            "neolithic tools OR stone age tools OR flint tools OR prehistoric "
+            "implements OR hand axe",
+            "tools",
+            1000,
+        ),
+        # "Fragments" - дуже специфічне слово. Краще шукати "shards" або просто кераміку
+        (
+            "pottery shards OR ceramic fragments OR archaeological sherds OR "
+            "broken pottery",
+            "fragments",
+            1000,
+        ),
+        # Додаємо намиста, оскільки це часто пов'язано
+        (
+            "ancient beads OR glass beads archaeology OR stone beads OR "
+            "prehistoric necklace",
+            "beads",
+            1000,
+        ),
     ]
 
     print("Starting download...")

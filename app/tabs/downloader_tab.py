@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QTextEdit, QFrame
-)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QComboBox, QFrame, QHBoxLayout, QLabel,
+                               QPushButton, QTextEdit, QVBoxLayout, QWidget)
+
 from app.workers import DownloadWorker
+
 
 class DownloaderTab(QWidget):
     def __init__(self):
@@ -15,28 +16,25 @@ class DownloaderTab(QWidget):
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(20)
 
-        
         header = QLabel("Dataset Management")
-        header.setObjectName("Header") 
+        header.setObjectName("Header")
         layout.addWidget(header)
 
-        
         control_frame = QFrame()
-        control_frame.setObjectName("Panel") 
-        
+        control_frame.setObjectName("Panel")
+
         control_layout = QHBoxLayout(control_frame)
         control_layout.setContentsMargins(20, 20, 20, 20)
         control_layout.setSpacing(15)
 
         lbl = QLabel("Images per category:")
-        
+
         self.limit_combo = QComboBox()
-        self.limit_combo.addItems(["100", "300", "600"])
+        self.limit_combo.addItems(["100", "300", "600", "1000"])
         self.limit_combo.setFixedWidth(120)
-        
-       
+
         self.download_btn = QPushButton("Start Download")
-        self.download_btn.setObjectName("ActionButton") 
+        self.download_btn.setObjectName("ActionButton")
         self.download_btn.setCursor(Qt.PointingHandCursor)
         self.download_btn.clicked.connect(self.start_download)
 
@@ -47,12 +45,11 @@ class DownloaderTab(QWidget):
 
         layout.addWidget(control_frame)
 
-        
         layout.addWidget(QLabel("Process Logs:"))
-        
+
         self.log_box = QTextEdit()
         self.log_box.setReadOnly(True)
-      
+
         layout.addWidget(self.log_box)
 
         self.setLayout(layout)

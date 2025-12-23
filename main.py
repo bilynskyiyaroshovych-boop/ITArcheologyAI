@@ -12,4 +12,4 @@ if __name__ == "__main__":
 # ngrok http 8000
 
 # https://preternaturally-incontestable-cristian.ngrok-free.dev/
-# https://127.0.0.1:8000 
+# https://127.0.0.1:8000

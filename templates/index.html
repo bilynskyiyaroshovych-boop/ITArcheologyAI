@@ -20,15 +20,21 @@
             <p id="upload-text" class="{{ 'hidden' if image_data else '' }}">
                 Click or Drag image here
             </p>
-            
+
             <input type="file" name="file" accept="image/*" required id="file-input">
-            
+
             <img id="preview" class="preview-img" 
                  src="{{ image_data if image_data else '' }}">
         </div>
 
         <button type="submit" class="btn-submit">Recognize Artifact</button>
     </form>
+
+    {% if error %}
+    <div class="error-card" style="color:#a94442; background:#fdecea; padding:10px; margin-top:10px; border-radius:6px;">
+        {{ error }}
+    </div>
+    {% endif %}
 
     {% if result %}
     <div class="result-card" id="result-box">
