@@ -1,5 +1,6 @@
-# exclude data and venv
+# exclude data, venv, caches and editor/dev files
 Archeological_Dataset/
+Archeological_Dataset/**
 .venv/
 venv/
 env/
@@ -7,13 +8,29 @@ env/
 __pycache__/
 .git
 .DS_Store
-.gitignore
-Dockerfile
-.dockerignore
 *.log
 .env
 build_log.txt
 README.md
+
+# tests and editor files
 tests/
 .idea/
 .vscode/
+
+# common build artifacts and node deps
+build/
+dist/
+*.egg-info
+node_modules/
+
+# image/scan files (explicitly excluded so photos won't be added to the image)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.tif
+*.tiff
+*.bmp
+*.raw
+*.djvu

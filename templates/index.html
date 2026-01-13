@@ -30,6 +30,12 @@
         <button type="submit" class="btn-submit">Recognize Artifact</button>
     </form>
 
+    {% if error_message %}
+    <div class="error-card" id="error-box">
+        <p class="error-text">{{ error_message }}</p>
+    </div>
+    {% endif %}
+
     {% if result %}
     <div class="result-card" id="result-box">
         <div class="result-header">

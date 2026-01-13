@@ -5,18 +5,18 @@ if __name__ == "__main__":
 
 # python main.py
 
-# docker build -t artifact-api .
+## docker build -t archaeological-app .
 
 # uvicorn api:app --host 0.0.0.0 --port 8000
-# docker run -d -p 8000:8000 artifact-api
 
 
-# docker start artifact-api
 
-# docker run --rm -it --entrypoint /bin/sh artifact-api
-    # uvicorn api:app --host 0.0.0.0 --port 8000
 
+# docker run --rm -p 8000:8000 archaeological-app:quick uvicorn api:app --host 0.0.0.0 --port 8000
+    
+# uvicorn api:app --host 0.0.0.0 --port 8000
 # ngrok http 8000
 
 # https://preternaturally-incontestable-cristian.ngrok-free.dev/
 # https://127.0.0.1:8000
+# http://0.0.0.0:8000

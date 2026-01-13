@@ -25,21 +25,40 @@ async def home(request: Request):
 @app.post("/", response_class=HTMLResponse)
 async def classify(request: Request, file: UploadFile = File(...)):
 
-    image_bytes = await file.read()
-    
+    # Basic content-type check
+    if not (file.content_type and file.content_type.startswith("image/")):
+        error_message = "Invalid file format. Please upload a valid image file (JPEG, PNG, GIF, TIFF, etc.)."
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "result": None,
+            "image_data": None,
+            "error_message": error_message
+        })
 
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    
+    image_bytes = await file.read()
+
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        # Pillow raises UnidentifiedImageError / OSError for invalid images
+        error_message = "Invalid file format. Please upload a valid image file (JPEG, PNG, GIF, TIFF, etc.)."
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "result": None,
+            "image_data": None,
+            "error_message": error_message
+        })
+
     result = predict_pil(image)
-    
-  
+
     encoded_image = base64.b64encode(image_bytes).decode("utf-8")
     image_data = f"data:image/jpeg;base64,{encoded_image}"
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "result": result,
-        "image_data": image_data  
+        "image_data": image_data,
+        "error_message": None
     })
 
 @app.get("/health")
