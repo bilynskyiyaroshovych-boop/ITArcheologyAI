@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QPushButton,
-                               QSpinBox, QTextEdit, QVBoxLayout, QWidget)
+                               QSpinBox, QTextEdit, QVBoxLayout, QWidget, QProgressBar)
 
 from app.workers import TrainWorker
 
@@ -52,6 +52,13 @@ class TrainingTab(QWidget):
         self.log_box.setReadOnly(True)
         layout.addWidget(self.log_box)
 
+        # Progress 
+        self.progress_label = QLabel("")
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        layout.addWidget(self.progress_label)
+        layout.addWidget(self.progress_bar)
+
         self.setLayout(layout)
 
     def start_training(self):
@@ -62,8 +69,36 @@ class TrainingTab(QWidget):
 
         self.worker = TrainWorker(epochs)
         self.worker.log.connect(self.log_box.append)
+        self.worker.progress.connect(self.on_progress)
         self.worker.finished.connect(self.on_finished)
         self.worker.start()
+
+    def on_progress(self, info):
+        # compute overall percent across epochs
+        if not isinstance(info, dict):
+            return
+        epoch = info.get("epoch", 1)
+        batch = info.get("batch")
+        total_batches = info.get("total_batches")
+        num_epochs = self.epochs_spin.value()
+
+        if batch and total_batches:
+            percent = int(100 * (((epoch - 1) + (batch / total_batches)) / max(1, num_epochs)))
+            self.progress_bar.setValue(percent)
+            self.progress_label.setText(f"Epoch {epoch}/{num_epochs} — Batch {batch}/{total_batches} — {percent}%")
+            # loss in the  log
+            loss = info.get("loss")
+            if loss is not None:
+                self.log_box.append(f"Batch {batch}/{total_batches} — loss: {loss:.4f}")
+        else:
+            phase = info.get("phase")
+            if phase == "epoch_summary":
+                self.log_box.append(f"Epoch {info.get('epoch')}: Train {info.get('train_acc'):.1%} | Val {info.get('val_acc'):.1%}")
+            elif phase == "finished":
+                best = info.get("best_val_acc")
+                if best is not None:
+                    self.log_box.append(f"Training finished. Best Val Acc: {best:.1%}")
+                self.progress_bar.setValue(100)
 
     def on_finished(self):
         self.train_btn.setEnabled(True)

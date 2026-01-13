@@ -1,5 +1,5 @@
 :root {
-    --primary: #8B5E3C; /* Археологічний коричневий */
+    --primary: #8B5E3C; 
     --bg: #fdfbf7;
     --surface: #ffffff;
     --text: #333;
@@ -35,7 +35,7 @@ h2 {
     font-weight: 600;
 }
 
-/* Стилізація зони завантаження */
+
 .upload-box {
     border: 2px dashed var(--accent);
     border-radius: 12px;
@@ -72,11 +72,11 @@ h2 {
     border-radius: 8px;
     margin-top: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    display: none; /* Ховаємо, якщо немає src */
+    display: none; 
     z-index: 1;
 }
 
-/* Якщо у картинки є атрибут src, показуємо її (потрібно для JS логіки) */
+
 .preview-img[src]:not([src=""]) {
     display: block;
 }
@@ -98,14 +98,14 @@ h2 {
     background-color: #6d482e;
 }
 
-/* Результат */
+
 .result-card {
     margin-top: 30px;
     padding: 20px;
     background: #f0f4f8;
     border-left: 5px solid var(--primary);
     border-radius: 8px;
-    opacity: 0; /* Для анімації GSAP */
+    opacity: 0; 
 }
 
 .result-header {

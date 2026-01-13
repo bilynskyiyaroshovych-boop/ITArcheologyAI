@@ -9,6 +9,13 @@ if __name__ == "__main__":
 
 # uvicorn api:app --host 0.0.0.0 --port 8000
 # docker run -d -p 8000:8000 artifact-api
+
+
+# docker start artifact-api
+
+# docker run --rm -it --entrypoint /bin/sh artifact-api
+    # uvicorn api:app --host 0.0.0.0 --port 8000
+
 # ngrok http 8000
 
 # https://preternaturally-incontestable-cristian.ngrok-free.dev/

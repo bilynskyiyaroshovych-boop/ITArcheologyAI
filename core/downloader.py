@@ -182,35 +182,35 @@ def run_downloader(tasks_data):
 
 if __name__ == "__main__":
     tasks = [
-        # Додаємо синоніми та пов'язані терміни через OR
+        
         (
             "ancient pottery OR archaeological ceramics OR clay vessels "
             "OR amphora OR terracotta",
             "ceramics",
             1000,
         ),
-        # Розширюємо до прикрас загалом, не тільки Бронзового віку, або додаємо синоніми
+        
         (
             "bronze age jewelry OR ancient jewelry OR gold ornaments OR "
             "archaeological finds jewelry OR fibula",
             "jewelry",
             1000,
         ),
-        # Додаємо конкретні матеріали (flint, stone) та синоніми (implements, weapons)
+        
         (
             "neolithic tools OR stone age tools OR flint tools OR prehistoric "
             "implements OR hand axe",
             "tools",
             1000,
         ),
-        # "Fragments" - дуже специфічне слово. Краще шукати "shards" або просто кераміку
+        
         (
             "pottery shards OR ceramic fragments OR archaeological sherds OR "
             "broken pottery",
             "fragments",
             1000,
         ),
-        # Додаємо намиста, оскільки це часто пов'язано
+        
         (
             "ancient beads OR glass beads archaeology OR stone beads OR "
             "prehistoric necklace",

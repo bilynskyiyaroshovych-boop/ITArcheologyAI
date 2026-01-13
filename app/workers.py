@@ -26,6 +26,7 @@ class DownloadWorker(QThread):
 
 class TrainWorker(QThread):
     log = Signal(str)
+    progress = Signal(object)
     finished = Signal()
 
     def __init__(self, epochs):
@@ -35,9 +36,11 @@ class TrainWorker(QThread):
     def run(self):
         self.log.emit("Initializing training...")
         try:
-
-            train(num_epochs=self.epochs, log_callback=self.log.emit)
+            train(
+                num_epochs=self.epochs,
+                log_callback=self.log.emit,
+                progress_callback=self.progress.emit,
+            )
         except Exception:
-
             self.log.emit(f"Critical Error:\n{traceback.format_exc()}")
         self.finished.emit()

@@ -1,11 +1,6 @@
 import json
 import os
-
-import torch
-import torch.nn as nn
 from PIL import Image
-from torchvision import transforms
-from torchvision.models import resnet34
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
@@ -13,7 +8,7 @@ CHECKPOINT_FILE = os.path.join(MODEL_DIR, "artifact_classifier.pth")
 CLASSES_FILE = os.path.join(MODEL_DIR, "classes.json")
 
 IMAGE_SIZE = 160
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = None  # will be set when torch is available
 
 RESPONSES = {
     "ceramics": "This looks like an ancient ceramic artifact.",
@@ -26,13 +21,27 @@ RESPONSES = {
 _model = None
 _classes = None
 _transform = None
+_torch_available = False
 
 
 def _load_model():
-    global _model, _classes, _transform
+    global _model, _classes, _transform, DEVICE, _torch_available, _torch
 
     if _model is not None:
         return
+
+    # Import heavy ML libs lazily so the API can start even if they're missing
+    try:
+        import torch
+        import torch.nn as nn
+        from torchvision import transforms
+        from torchvision.models import resnet34
+    except Exception as e:
+        raise RuntimeError(f"PyTorch or torchvision import failed: {e}")
+
+    _torch_available = True
+    _torch = torch
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if not os.path.exists(CHECKPOINT_FILE):
         raise FileNotFoundError("Model checkpoint not found")
@@ -44,11 +53,10 @@ def _load_model():
         _classes = json.load(f)
 
     # Do not request pretrained weights at inference time (may attempt network download).
-    # We only need the architecture so use weights=None and then load our checkpoint.
     weights = None
     _model = resnet34(weights=weights)
     _model.fc = nn.Linear(_model.fc.in_features, len(_classes))
-    _model.load_state_dict(torch.load(CHECKPOINT_FILE, map_location=DEVICE))
+    _model.load_state_dict(_torch.load(CHECKPOINT_FILE, map_location=DEVICE))
     _model.to(DEVICE)
     _model.eval()
 
@@ -67,12 +75,15 @@ def _load_model():
 def predict_pil(image: Image.Image):
     _load_model()
 
+    if not _torch_available:
+        raise RuntimeError("PyTorch is not available in this environment.")
+
     tensor = _transform(image).unsqueeze(0).to(DEVICE)
 
-    with torch.no_grad():
+    with _torch.no_grad():
         outputs = _model(tensor)
-        probs = torch.softmax(outputs, dim=1)
-        conf, pred = torch.max(probs, 1)
+        probs = _torch.softmax(outputs, dim=1)
+        conf, pred = _torch.max(probs, 1)
 
     cls = _classes[pred.item()]
     confidence = conf.item()
